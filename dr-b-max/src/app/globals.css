@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-medical-white: #f9f9f9;
+  --color-medical-bg: #e0f7fa;
+  --color-neon-green: #39ff14;
+  --color-alert-red: #ff3131;
+  --color-soft-blue: #b4cbce;
+  --color-surface-dim: #dadada;
+  --color-text-primary: #1a1c1c;
+  --color-text-secondary: #424849;
+  --font-sans: "Inter", "Arial", sans-serif;
+  --radius-medical: 24px;
+}
+
+/* ===== DARK MODE OVERRIDES ===== */
+[data-theme="dark"] {
+  --color-medical-bg: #0d1117;
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-surface-dim: #21262d;
+  --color-soft-blue: #1f6feb;
+}
+
+[data-theme="dark"] body {
+  background: var(--color-medical-bg);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .glass-panel {
+  background: rgba(22, 27, 34, 0.85);
+  border-color: rgba(48, 54, 61, 0.8);
+}
+
+body {
+  background: var(--color-medical-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-medical);
+}
+
+.map-tiles-filter {
+  filter: invert(100%) hue-rotate(180deg) brightness(80%) contrast(120%) sepia(30%) saturate(150%);
+}
