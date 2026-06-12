@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { FaCamera, FaBrain, FaHeartbeat, FaLungs, FaBolt, FaBatteryHalf } from "react-icons/fa";
+import { FaCamera, FaBrain, FaHeartbeat, FaLungs, FaBolt, FaBatteryHalf, FaExclamationTriangle } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import "@/lib/i18n";
