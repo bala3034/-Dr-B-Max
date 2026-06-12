@@ -21,6 +21,8 @@ export default function SymptomsPage() {
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [analyzed, setAnalyzed] = useState(false);
+  const [aiOpinion, setAiOpinion] = useState<string | null>(null);
+  const [loadingAi, setLoadingAi] = useState(false);
   const { t } = useTranslation();
 
   const toggle = (id: string) => {
@@ -38,7 +40,34 @@ export default function SymptomsPage() {
     setAnalyzed(true);
   };
 
-  const reset = () => { setSelected(new Set()); setResult(null); setAnalyzed(false); };
+  const reset = () => { setSelected(new Set()); setResult(null); setAnalyzed(false); setAiOpinion(null); };
+
+  const getAiOpinion = async () => {
+    if (selected.size === 0) return;
+    setLoadingAi(true);
+    setAiOpinion(null);
+    try {
+      // Look up symptom labels for the prompt
+      const symptomLabels = Array.from(selected).map(id => ALL_SYMPTOMS.find(s => s.id === id)?.label).filter(Boolean);
+      const prompt = `I am experiencing the following symptoms: ${symptomLabels.join(', ')}. The local offline engine suggested an overall severity of ${result?.overallSeverity} with conditions like ${result?.conditions.map(c => c.name).join(', ')}. Can you provide a second opinion, explain what might be going on, and give some actionable advice? Keep it concise and formatted clearly. Note: always remind me to see a doctor if it sounds serious.`;
+      
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAiOpinion(data.result);
+      } else {
+        setAiOpinion("Gemini AI is currently unreachable.");
+      }
+    } catch (e) {
+      setAiOpinion("Failed to connect to AI brain.");
+    } finally {
+      setLoadingAi(false);
+    }
+  };
 
   const filtered = ALL_SYMPTOMS.filter(s =>
     (filter === "All" || s.category === filter) &&
@@ -159,6 +188,36 @@ export default function SymptomsPage() {
                     <p className="text-sm font-medium text-[#424849]">💡 {cond.advice}</p>
                   </motion.div>
                 ))}
+              </div>
+
+              {/* AI Second Opinion Section */}
+              <div className="mt-8">
+                <button 
+                  onClick={getAiOpinion} 
+                  disabled={loadingAi}
+                  className="w-full py-4 bg-gradient-to-r from-[#1a1c1c] to-[#424849] text-white font-black text-lg rounded-[16px] flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(57,255,20,0.4)] transition-all disabled:opacity-50"
+                >
+                  <FaBrain className="text-[#39ff14]" /> 
+                  {loadingAi ? "Consulting Gemini AI..." : "Get AI Second Opinion"}
+                </button>
+
+                <AnimatePresence>
+                  {aiOpinion && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }} 
+                      animate={{ opacity: 1, height: "auto" }} 
+                      className="mt-4 p-5 rounded-[20px] bg-white border-2 border-[#39ff14] shadow-lg relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#39ff14] rounded-full blur-[80px] opacity-20 pointer-events-none" />
+                      <h3 className="font-black text-[#1a1c1c] text-lg mb-3 flex items-center gap-2">
+                        <FaBrain className="text-[#39ff14]" /> Gemini AI Analysis
+                      </h3>
+                      <div className="text-[#424849] text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                        {aiOpinion}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           )}

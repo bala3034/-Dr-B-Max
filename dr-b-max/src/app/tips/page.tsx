@@ -111,9 +111,45 @@ export default function TipsPage() {
   const [displayedCount, setDisplayedCount] = useState(TIPS_PER_PAGE);
   const [activeCategory, setActiveCategory] = useState("All");
   const [savedTips, setSavedTips] = useState<Set<number>>(new Set());
+  const [aiTips, setAiTips] = useState<HealthTip[]>([]);
+  const [generatingAi, setGeneratingAi] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
 
-  const tips: HealthTip[] = ALL_TIPS.map((t, i) => ({ ...t, id: i }))
+  const generateAiTip = async () => {
+    setGeneratingAi(true);
+    try {
+      const prompt = `Generate a short, interesting, and evidence-based health tip. Return ONLY a JSON object with this exact structure, nothing else: { "category": "String (e.g. Focus, Recovery, Brain)", "title": "Catchy Title", "body": "Short detailed explanation", "color": "#hexcode" }`;
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const jsonStr = data.result.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const tipData = JSON.parse(jsonStr);
+        
+        const newTip: HealthTip = {
+          id: Date.now(),
+          icon: <FaBrain />,
+          category: tipData.category || "AI Insight",
+          title: tipData.title,
+          body: tipData.body,
+          color: tipData.color || "#39ff14"
+        };
+        
+        setAiTips(prev => [newTip, ...prev]);
+        setActiveCategory("All"); // Switch to All to see the new tip
+      }
+    } catch (e) {
+      console.error("Failed to generate AI tip:", e);
+    } finally {
+      setGeneratingAi(false);
+    }
+  };
+
+  const allCombinedTips = [...aiTips, ...ALL_TIPS.map((t, i) => ({ ...t, id: i + 1000 }))];
+  const tips: HealthTip[] = allCombinedTips
     .filter(t => activeCategory === "All" || t.category === activeCategory);
 
   const displayed = tips.slice(0, displayedCount);
@@ -147,14 +183,29 @@ export default function TipsPage() {
     <main className="min-h-screen bg-[var(--color-medical-bg)] p-4 md:p-8 font-sans">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 rounded-full bg-[#1a1c1c] flex items-center justify-center shadow-[0_0_20px_rgba(57,255,20,0.3)]">
-            <FaLightbulb className="text-[#39ff14] text-2xl" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-[#1a1c1c] flex items-center justify-center shadow-[0_0_20px_rgba(57,255,20,0.3)]">
+              <FaLightbulb className="text-[#39ff14] text-2xl" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-[#1a1c1c] tracking-tight">Health Tips</h1>
+              <p className="text-[#424849] font-medium">Evidence-based tips · Offline · {ALL_TIPS.length} articles</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-black text-[#1a1c1c] tracking-tight">Health Tips</h1>
-            <p className="text-[#424849] font-medium">Evidence-based tips · Offline · {ALL_TIPS.length} articles</p>
-          </div>
+          <button 
+            onClick={generateAiTip}
+            disabled={generatingAi}
+            className="px-4 py-2 bg-gradient-to-r from-[#1a1c1c] to-[#424849] text-white rounded-[12px] font-bold shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:scale-105 transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            {generatingAi ? (
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                <FaBrain className="text-[#39ff14]" />
+              </motion.div>
+            ) : (
+              <><FaBrain className="text-[#39ff14]" /> Generate AI Tip</>
+            )}
+          </button>
         </div>
 
         {/* Category Filter */}

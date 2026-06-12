@@ -50,6 +50,7 @@ export default function BiometricScannerPage() {
   const [flash, setFlash] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [batterySaver, setBatterySaver] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
   const batterySaverRef = useRef(false);
 
   useEffect(() => {
@@ -118,9 +119,10 @@ export default function BiometricScannerPage() {
             return;
           }
 
-          // A. Detect Face
+          // A. Detect Face / Finger
           const faces = await detector.estimateFaces(videoRef.current, false);
           if (faces.length > 0) {
+            setIsDetecting(true);
             const start = faces[0].topLeft as [number, number];
             const end = faces[0].bottomRight as [number, number];
             
@@ -203,6 +205,8 @@ export default function BiometricScannerPage() {
               else if (calcBpm > 100) setStress("High");
               else setStress("Normal");
             }
+          } else {
+            setIsDetecting(false);
           }
 
           if (batterySaverRef.current) {
@@ -242,9 +246,9 @@ export default function BiometricScannerPage() {
     <main className="h-screen bg-[var(--color-medical-bg)] flex flex-col items-center justify-start relative overflow-y-auto overflow-x-hidden font-sans pt-8 pb-8">
       <header className="w-full flex justify-between items-center px-8 z-30 mb-4 mt-4 max-w-5xl shrink-0">
          <div>
-            <h1 className="text-4xl font-extrabold text-[#1a1c1c]">Health Sensors Suite</h1>
-            <p className="text-[#424849] font-medium flex items-center gap-2">
-              <FaBrain className="text-[#39ff14] drop-shadow-md" /> {status}
+            <h1 className="text-4xl font-extrabold text-slate-800">Health Sensors Suite</h1>
+            <p className="text-slate-500 font-medium flex items-center gap-2">
+              <FaBrain className="text-blue-500 drop-shadow-sm" /> {status}
             </p>
          </div>
          <button 
@@ -259,15 +263,26 @@ export default function BiometricScannerPage() {
       <canvas ref={hiddenCanvasRef} className="hidden" />
 
       {/* Camera Feed Container */}
-      <div className="relative z-10 w-full max-w-4xl aspect-video rounded-[32px] overflow-hidden shadow-2xl border-[4px] border-white bg-black">
+      <div className="relative z-10 w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-2xl border-[6px] border-white bg-slate-900">
         {hasCamera ? (
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted 
-            className="w-full h-full object-cover opacity-90"
-          />
+          <>
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className="w-full h-full object-cover opacity-90"
+            />
+            {!isDetecting && (
+              <div className="absolute inset-0 bg-red-500/20 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+                <div className="bg-white px-6 py-4 rounded-2xl shadow-2xl flex flex-col items-center border border-red-200">
+                  <FaExclamationTriangle className="text-4xl text-red-500 mb-2 animate-bounce" />
+                  <p className="text-red-600 font-bold text-lg">No face/finger detected!</p>
+                  <p className="text-slate-600 font-medium text-sm">Please keep your face/finger properly in the camera frame.</p>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-white/50">
             <FaCamera className="text-6xl mb-4" />
@@ -281,29 +296,29 @@ export default function BiometricScannerPage() {
         )}
 
         {/* Scanning Overlay Grid */}
-        <div className="absolute inset-0 z-20 pointer-events-none opacity-40 mix-blend-overlay" 
-             style={{ backgroundImage: 'linear-gradient(#39ff14 2px, transparent 2px), linear-gradient(90deg, #39ff14 2px, transparent 2px)', backgroundSize: '60px 60px' }} 
+        <div className="absolute inset-0 z-20 pointer-events-none opacity-20 mix-blend-overlay" 
+             style={{ backgroundImage: 'linear-gradient(#3b82f6 2px, transparent 2px), linear-gradient(90deg, #3b82f6 2px, transparent 2px)', backgroundSize: '60px 60px' }} 
         />
 
         <motion.div 
           animate={{ top: ["0%", "100%", "0%"] }}
           transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-          className="absolute left-0 w-full h-[8px] bg-[#39ff14] z-30 shadow-[0_0_40px_#39ff14]"
+          className="absolute left-0 w-full h-[4px] bg-blue-500 z-30 shadow-[0_0_20px_#3b82f6]"
         />
       </div>
 
       <div className="mt-8 z-30 flex items-center gap-6 w-full max-w-4xl justify-center shrink-0">
         <div 
-          className={`glass-panel px-10 py-6 flex flex-col items-center transition-all ${flash ? "bg-[#39ff14]/20 border-[#39ff14]" : "bg-white/80"} shadow-xl min-w-[250px]`}
+          className={`glass-panel px-10 py-6 flex flex-col items-center transition-all ${flash ? "bg-blue-50 border-blue-200" : "bg-white/80"} shadow-xl min-w-[250px]`}
         >
           <div className="flex items-center gap-3 mb-2">
             <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>
-              <FaHeartbeat className="text-[#39ff14] text-2xl drop-shadow-md" />
+              <FaHeartbeat className="text-red-500 text-2xl drop-shadow-sm" />
             </motion.div>
-            <span className="text-xs font-bold text-[#424849] uppercase tracking-widest">Heart Rate</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Heart Rate</span>
           </div>
-          <span className="text-5xl font-extrabold text-[#39ff14] flex items-baseline gap-2 drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]">
-            {bpm} <span className="text-xl text-[#1a1c1c]">BPM</span>
+          <span className="text-5xl font-extrabold text-slate-800 flex items-baseline gap-2">
+            {bpm} <span className="text-xl text-slate-500">BPM</span>
           </span>
         </div>
 
@@ -312,12 +327,12 @@ export default function BiometricScannerPage() {
         >
           <div className="flex items-center gap-3 mb-2">
             <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 2 }}>
-              <FaLungs className="text-[#00d2ff] text-2xl drop-shadow-md" />
+              <FaLungs className="text-blue-500 text-2xl drop-shadow-sm" />
             </motion.div>
-            <span className="text-xs font-bold text-[#424849] uppercase tracking-widest">Blood Oxygen</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Blood Oxygen</span>
           </div>
-          <span className="text-5xl font-extrabold text-[#00d2ff] flex items-baseline gap-2 drop-shadow-[0_0_10px_rgba(0,210,255,0.5)]">
-            {spo2} <span className="text-xl text-[#1a1c1c]">%</span>
+          <span className="text-5xl font-extrabold text-slate-800 flex items-baseline gap-2">
+            {spo2} <span className="text-xl text-slate-500">%</span>
           </span>
         </div>
 
@@ -326,11 +341,11 @@ export default function BiometricScannerPage() {
         >
           <div className="flex items-center gap-3 mb-2">
             <motion.div animate={stress === "High" ? { rotate: [0, 10, -10, 0] } : { scale: 1 }} transition={{ repeat: Infinity, duration: 0.5 }}>
-              <FaBolt className={`${stress === "High" ? "text-red-500" : "text-[#39ff14]"} text-2xl drop-shadow-md`} />
+              <FaBolt className={`${stress === "High" ? "text-red-500" : "text-emerald-500"} text-2xl drop-shadow-sm`} />
             </motion.div>
-            <span className="text-xs font-bold text-[#424849] uppercase tracking-widest">Stress Level</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Stress Level</span>
           </div>
-          <span className={`text-4xl font-extrabold flex items-baseline gap-2 ${stress === "High" ? "text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "text-[#39ff14] drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]"}`}>
+          <span className={`text-4xl font-extrabold flex items-baseline gap-2 ${stress === "High" ? "text-red-500" : "text-emerald-500"}`}>
             {stress}
           </span>
         </div>
@@ -343,10 +358,10 @@ export default function BiometricScannerPage() {
           disabled={typeof bpm !== "number" || saveStatus !== "idle"}
           className={`px-8 py-4 rounded-full font-bold text-lg tracking-wider uppercase transition-all shadow-xl ${
             typeof bpm !== "number" 
-              ? "bg-gray-400 text-gray-200 cursor-not-allowed" 
+              ? "bg-slate-200 text-slate-400 cursor-not-allowed" 
               : saveStatus === "saved" 
-                ? "bg-[#39ff14] text-black border-4 border-[#39ff14]/50" 
-                : "bg-black text-[#39ff14] border-2 border-[#39ff14] hover:bg-[#39ff14] hover:text-black hover:shadow-[0_0_20px_#39ff14]"
+                ? "bg-emerald-500 text-white border-2 border-emerald-500" 
+                : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg"
           }`}
         >
           {saveStatus === "idle" && "Save to Medical Record"}
@@ -386,54 +401,54 @@ export default function BiometricScannerPage() {
         </div>
 
         {/* Technical Deep Dive & Solutions */}
-        <div className="glass-panel p-8 bg-[#1a1c1c] text-white shadow-2xl rounded-3xl border border-[#39ff14]/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#39ff14] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
+        <div className="glass-panel p-8 bg-slate-800 text-white shadow-2xl rounded-3xl border border-slate-700 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
           
-          <h2 className="text-2xl font-black text-[#39ff14] mb-6 flex items-center gap-3">
+          <h2 className="text-2xl font-black text-blue-400 mb-6 flex items-center gap-3">
              <FaBrain className="text-3xl" /> 
              Overcoming Web Limitations: The "Big" Solution
           </h2>
           
-          <div className="space-y-6 text-sm font-medium text-gray-300 relative z-10">
-            <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-[#39ff14]/30 transition-colors">
+          <div className="space-y-6 text-sm font-medium text-slate-300 relative z-10">
+            <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-blue-400/30 transition-colors">
               <strong className="block text-white text-lg mb-2 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500"></span> The Browser Flashlight Barrier</strong>
               <p>
                 Mobile web browsers (Progressive Web Apps) actively restrict Javascript from controlling the phone's LED Flashlight for security and battery reasons. Without the flash acting as a controlled, high-intensity light source, reading the microscopic color changes in your finger (PPG) is prone to massive environmental noise, making web-based heart rate sensors inaccurate outside of perfect lighting.
               </p>
             </div>
 
-            <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-[#39ff14]/30 transition-colors">
+            <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-blue-400/30 transition-colors">
               <strong className="block text-white text-lg mb-2 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500"></span> Step 1: The Native App Architecture</strong>
               <p>
-                To build a production-grade module, you must step out of the browser and build a <strong className="text-[#39ff14]">React Native</strong> or <strong className="text-[#39ff14]">Flutter</strong> application. Native frameworks provide direct bridging to native iOS/Android camera APIs (like `react-native-vision-camera`). This allows explicit toggling of the hardware torch (`torch="on"`) while recording uncompressed 60FPS video, which is mandatory for clinical-grade PPG extraction.
+                To build a production-grade module, you must step out of the browser and build a <strong className="text-blue-400">React Native</strong> or <strong className="text-blue-400">Flutter</strong> application. Native frameworks provide direct bridging to native iOS/Android camera APIs (like `react-native-vision-camera`). This allows explicit toggling of the hardware torch (`torch="on"`) while recording uncompressed 60FPS video, which is mandatory for clinical-grade PPG extraction.
               </p>
             </div>
 
-            <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-[#39ff14]/30 transition-colors">
+            <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-blue-400/30 transition-colors">
               <strong className="block text-white text-lg mb-4 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-purple-500"></span> Step 2: Training the AI Module (Model Engineering)</strong>
               <ul className="space-y-4">
                 <li className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#39ff14]/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-[#39ff14] text-xs font-bold">1</span></div>
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-blue-400 text-xs font-bold">1</span></div>
                   <div>
-                    <strong className="text-white">Data Sourcing:</strong> You do not need to capture all this data yourself. Utilize open-source medical datasets like <em className="text-[#39ff14]">UBFC-rPPG</em>, <em className="text-[#39ff14]">PURE</em>, or <em className="text-[#39ff14]">MIMIC-III</em>. These datasets provide thousands of synchronized RGB face/finger videos perfectly paired with actual, ground-truth ECG and Pulse Oximeter readings.
+                    <strong className="text-white">Data Sourcing:</strong> You do not need to capture all this data yourself. Utilize open-source medical datasets like <em className="text-blue-400">UBFC-rPPG</em>, <em className="text-blue-400">PURE</em>, or <em className="text-blue-400">MIMIC-III</em>. These datasets provide thousands of synchronized RGB face/finger videos perfectly paired with actual, ground-truth ECG and Pulse Oximeter readings.
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#39ff14]/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-[#39ff14] text-xs font-bold">2</span></div>
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-blue-400 text-xs font-bold">2</span></div>
                   <div>
                     <strong className="text-white">Feature Extraction:</strong> Process the raw video data frame-by-frame to extract the average RGB channel variations over time. This continuous stream of color fluctuation represents the blood volume pulse wave.
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#39ff14]/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-[#39ff14] text-xs font-bold">3</span></div>
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-blue-400 text-xs font-bold">3</span></div>
                   <div>
                     <strong className="text-white">Neural Network Architecture:</strong> Instead of simple math, train a <strong className="text-white">3D Convolutional Neural Network (3D-CNN)</strong> or a <strong className="text-white">Vision Transformer (ViT)</strong>. The AI will learn the hidden non-linear mappings between noisy RGB variations and actual BPM, SpO2, and respiratory metrics.
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#39ff14]/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-[#39ff14] text-xs font-bold">4</span></div>
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5"><span className="text-blue-400 text-xs font-bold">4</span></div>
                   <div>
-                    <strong className="text-white">Edge Deployment:</strong> Convert the trained PyTorch/TensorFlow model into <strong className="text-[#39ff14]">TensorFlow Lite (TFLite)</strong> or <strong className="text-[#39ff14]">CoreML</strong>. This ensures the model runs locally on the phone's Neural Processing Unit (NPU) in real-time, preserving extreme privacy (no medical data is ever sent to the cloud).
+                    <strong className="text-white">Edge Deployment:</strong> Convert the trained PyTorch/TensorFlow model into <strong className="text-blue-400">TensorFlow Lite (TFLite)</strong> or <strong className="text-blue-400">CoreML</strong>. This ensures the model runs locally on the phone's Neural Processing Unit (NPU) in real-time, preserving extreme privacy (no medical data is ever sent to the cloud).
                   </div>
                 </li>
               </ul>

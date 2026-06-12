@@ -31,34 +31,25 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      // Mock fetch to local Ollama API
-      // Since Ollama might not be running on the user's machine during dev,
-      // we'll simulate the offline fetch with a timeout for now if fetch fails.
-      const res = await fetch('http://localhost:11434/api/generate', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'llama3', // or another local model
           prompt: input,
-          stream: false
         })
       });
 
       if (res.ok) {
         const data = await res.json();
-        setMessages([...newMessages, { role: 'assistant', content: data.response }]);
+        setMessages([...newMessages, { role: 'assistant', content: data.result }]);
       } else {
-        throw new Error("Ollama not reachable");
+        throw new Error("Gemini API not reachable");
       }
     } catch (e) {
-      // Fallback if local LLM is not running
-      setTimeout(() => {
-        setMessages([...newMessages, { 
-          role: 'assistant', 
-          content: 'Local AI engine (Ollama) is currently unreachable. Please ensure it is running locally for full offline intelligence. But remember, I am always here to help!' 
-        }]);
-        setIsLoading(false);
-      }, 1000);
+      setMessages([...newMessages, { 
+        role: 'assistant', 
+        content: 'I am having trouble connecting to my AI brain. Please check your internet connection and API key.' 
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +74,7 @@ export default function ChatPage() {
               <h1 className="text-2xl font-bold text-[#1a1c1c]">Dr. B-MAX</h1>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#39ff14] shadow-[0_0_8px_rgba(57,255,20,0.8)]" />
-                <span className="text-sm text-[#424849] font-medium tracking-wide">100% Offline Core Active</span>
+                <span className="text-sm text-[#424849] font-medium tracking-wide">Gemini AI Core Active</span>
               </div>
             </div>
           </div>

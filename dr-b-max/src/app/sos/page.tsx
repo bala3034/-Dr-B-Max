@@ -2,11 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { FaPhoneAlt, FaBan } from "react-icons/fa";
+import { FaPhoneAlt, FaBan, FaSms, FaMapMarkerAlt } from "react-icons/fa";
 
 export default function SOSPage() {
   const [countdown, setCountdown] = useState(10);
   const [isCalling, setIsCalling] = useState(false);
+  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [locating, setLocating] = useState(true);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setLocating(false);
+        },
+        (err) => {
+          console.error("Location error:", err);
+          setLocating(false);
+        }
+      );
+    } else {
+      setLocating(false);
+    }
+  }, []);
 
   useEffect(() => {
     // Generate an annoying warning beep dynamically via Web Audio API 
@@ -82,25 +101,34 @@ export default function SOSPage() {
               Calling emergency services in {countdown}...
             </p>
           ) : (
-            <p className="text-4xl text-[#39ff14] font-black" aria-live="polite">
+            <p className="text-4xl text-emerald-400 font-black" aria-live="polite">
               Connecting to Emergency Services...
             </p>
           )}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 w-full max-w-lg mt-8">
-          <button 
+        <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl mt-8">
+          <a 
+            href="tel:108"
             onClick={() => setIsCalling(true)}
-            disabled={isCalling}
-            className={`flex-1 font-black text-2xl py-6 rounded-[24px] shadow-2xl transition-transform flex items-center justify-center gap-4 ${isCalling ? 'bg-gray-500 text-gray-300 cursor-not-allowed' : 'bg-white text-[var(--color-alert-red)] hover:scale-105'}`}
-            aria-label="Call 911 immediately"
+            className={`flex-1 font-black text-xl md:text-2xl py-6 rounded-[24px] shadow-2xl transition-transform flex items-center justify-center gap-3 ${isCalling ? 'bg-gray-500 text-gray-300' : 'bg-white text-[var(--color-alert-red)] hover:scale-105'}`}
+            aria-label="Call 108 immediately"
           >
-            <FaPhoneAlt /> Call 911
-          </button>
+            <FaPhoneAlt /> Call 108
+          </a>
           
+          <a 
+            href={location ? `sms:108?body=EMERGENCY! My location is: https://maps.google.com/?q=${location.lat},${location.lng}` : '#'}
+            onClick={(e) => { if (!location) e.preventDefault(); }}
+            className={`flex-1 font-black text-xl md:text-2xl py-6 rounded-[24px] shadow-2xl transition-transform flex items-center justify-center gap-3 ${!location ? 'bg-gray-500 text-gray-300 cursor-not-allowed' : 'bg-emerald-500 text-white hover:scale-105'}`}
+            aria-label="Send Location SMS"
+          >
+            <FaSms /> {locating ? "Locating..." : "SMS Location"}
+          </a>
+
           <Link 
             href="/" 
-            className="flex-1 bg-black/50 backdrop-blur-md border border-white/20 text-white font-bold text-xl py-6 rounded-[24px] hover:bg-black/80 transition-colors flex items-center justify-center gap-4"
+            className="flex-1 bg-black/50 backdrop-blur-md border border-white/20 text-white font-bold text-xl py-6 rounded-[24px] hover:bg-black/80 transition-colors flex items-center justify-center gap-3"
             aria-label="Cancel emergency call and return to home"
           >
             <FaBan /> Cancel

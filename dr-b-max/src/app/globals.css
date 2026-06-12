@@ -1,25 +1,26 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-medical-white: #f9f9f9;
-  --color-medical-bg: #e0f7fa;
-  --color-neon-green: #39ff14;
-  --color-alert-red: #ff3131;
-  --color-soft-blue: #b4cbce;
-  --color-surface-dim: #dadada;
-  --color-text-primary: #1a1c1c;
-  --color-text-secondary: #424849;
+  --color-medical-white: #ffffff;
+  --color-medical-bg: #f7f9fb;
+  --color-neon-green: #00d2ff; /* Repurposed to clinical blue */
+  --color-alert-red: #ef5350;
+  --color-soft-blue: #e3f2fd;
+  --color-surface-dim: #eceef0;
+  --color-text-primary: #191c1e;
+  --color-text-secondary: #526069;
   --font-sans: "Inter", "Arial", sans-serif;
-  --radius-medical: 24px;
+  --radius-medical: 16px;
 }
 
 /* ===== DARK MODE OVERRIDES ===== */
 [data-theme="dark"] {
-  --color-medical-bg: #0d1117;
-  --color-text-primary: #e6edf3;
-  --color-text-secondary: #8b949e;
-  --color-surface-dim: #21262d;
-  --color-soft-blue: #1f6feb;
+  --color-medical-bg: #1e293b;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-surface-dim: #334155;
+  --color-soft-blue: #3b82f6;
+  --color-neon-green: #38bdf8;
 }
 
 [data-theme="dark"] body {
@@ -28,8 +29,9 @@
 }
 
 [data-theme="dark"] .glass-panel {
-  background: rgba(22, 27, 34, 0.85);
-  border-color: rgba(48, 54, 61, 0.8);
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
 }
 
 body {
@@ -43,11 +45,12 @@ body {
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: var(--radius-medical);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
 
 .map-tiles-filter {
